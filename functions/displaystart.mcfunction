@@ -1,3 +1,1 @@
-title @a times 10 20 10
-title @a title Ready...
 title @a title Start!

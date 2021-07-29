@@ -1,1 +1,1 @@
-teleport @s -313 63 84
+teleport @a 83 74 -509
