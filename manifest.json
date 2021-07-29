@@ -1,0 +1,18 @@
+{
+    "format_version": 2,
+    "header": {
+        "description": "A collection of scripts to enable functionality in the Golden Apple Arena",
+        "name": "Golden Apple Arena 0.1.0",
+        "uuid": "36b5816f-2185-4a80-a707-ca68a713e161",
+        "version": [ 0, 1, 0 ],
+        "min_engine_version": [ 1, 13, 0 ]
+    },
+    "modules": [
+        {
+            "description": "Server scripts",
+            "type": "data",
+            "uuid": "f54bbcfe-72a1-46b6-8f6b-f3c850d4f69c",
+            "version": [0, 1, 0 ]
+        }
+    ]
+}
