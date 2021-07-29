@@ -1,24 +1,15 @@
 const goldenAppleSystem = server.registerSystem(0, 0);
-const appleChestCoords = [-314, 100, 103];
-const sourceChestCoords = [-312, 60, 99];
+const appleChestCoords = [74, 131, - 511];
 const ticksPerSec = 20;
 const pollingDelaySecs = 0.2;
 
 const globals = {
     goldenAppleChest: null,
-    goldenAppleContainer: null,
-    chestDesignated: false,
-    retrievalChest: null,
     applePolling: null,
     finalPlayers: [],
 };
 
-// let goldenAppleChest;
-// let goldenAppleContainer;
-// let chestDesignated = false;
-
-goldenAppleSystem.initialize = function() {
-    // initialize variables and set up event listeners here
+goldenAppleSystem.initialize = function () {
 
     // Set up chatlog debugging
     var scriptLoggerConfig = this.createEventData('minecraft:script_logger_config');
@@ -28,17 +19,12 @@ goldenAppleSystem.initialize = function() {
     this.broadcastEvent("minecraft:script_logger_config", scriptLoggerConfig);
 
     // Listen for player to acquire golden apple
-    this.listenForEvent('minecraft:entity_acquired_item', eventData => this.onItemAcquired(eventData));
-
-    // Listen for player to spawn into world (CLIENT EVENT ONLY)
-    //this.listenForEvent('minecraft:entity_death', eventData => this.sendChatMessage(`${eventData.data.entity.__identifier__} has perished.`));
+    // TODO: Implement more granular apple-checking after event bug is fixed
+    // Bug filed for this event: https://bugs.mojang.com/browse/MCPE-136964
+    //this.listenForEvent('minecraft:entity_acquired_item', eventData => this.onItemAcquired(eventData));
 
     this.listenForEvent('minecraft:block_interacted_with', eventData => this.blockInteraction(eventData));
-
-    //this.listenForEvent('minecraft:entity_dropped_item', eventData => this.sendChatMessage(`${eventData.data.entity.__identifier__} dropped item ${eventData.data.item_stack.item}`));
-
-    //this.listenForEvent('goldenAppleArena:on_interact', eventData => this.sendChatMessage("On Interact successfully performed."));
-}
+};
 
 let appleTimer = 0;
 goldenAppleSystem.update = function () {
@@ -72,17 +58,8 @@ goldenAppleSystem.blockInteraction = function (eventData) {
     const { player, block_position } = eventData.data;
     const block = this.getBlockFromInteraction(player, block_position);
 
-    // TEMPORARY
-    // this.sendChatMessage("/give @p torch 1")
-
-    if (this.isBlockSourceChest(player, block_position)) {
-        // start polling to replace golden apple if it disappears
-        this.checkToReplaceApple(block, player);
-        return;
-    }
-
     if (this.isBlockFinalChest(player, block_position)) {
-        this.sendChatMessage(`Player ${player.id} has reached the final chest.`);
+        this.sendChatMessage(`Player ${player.id} has opened the final chest.`);
         if (!this.isAppleInChest(block)) {
             this.startFinalPolling(player, block);
             return;
@@ -100,16 +77,6 @@ goldenAppleSystem.getContainerFromBlock = function (block) {
 goldenAppleSystem.getBlockFromInteraction = function (player, block_position) {
     const tickingArea = this.getComponent(player, "minecraft:tick_world");
     return this.getBlock(tickingArea.data.ticking_area, block_position);
-};
-
-goldenAppleSystem.checkToReplaceApple = function (block, player) {
-    if (!this.isAppleInChest(block)) {
-        // drop new apple
-        // TODO: currently containers are read-only. when they are editable, put apple in chest instead
-        // this.createEntity("item_entity", "minecraft:golden_apple");
-        const acquireItem = createComponent(player, "minecraft:entity_acquired_item");
-        this.sendChatMessage("A golden apple dropped to the floor.");
-    }
 };
 
 goldenAppleSystem.startFinalPolling = function (player, block) {
@@ -179,6 +146,7 @@ goldenAppleSystem.isAppleInChest = function (block) {
         const stack = container.data[i];
         if (stack.item === 'minecraft:golden_apple') {
             hasApple = true;
+            this.sendChatMessage("A golden apple has been placed in the final chest.");
             break;
         }
     }
@@ -198,23 +166,10 @@ goldenAppleSystem.isBlockFinalChest = function(player, block_position) {
     return this.isChest(player, block_position);
 }
 
-goldenAppleSystem.isBlockSourceChest = function (player, block_position) {
-    if (!this.isSamePosition(sourceChestCoords, block_position)) {
-        return false;
-    }
-    return this.isChest(player, block_position);
-}
-
 goldenAppleSystem.isChest = function (player, block_position) {
     const tickingArea = this.getComponent(player, "minecraft:tick_world");
     const block = this.getBlock(tickingArea.data.ticking_area, block_position);
     return this.hasComponent(block, "minecraft:container");
-}
-
-goldenAppleSystem.registerAppleChest = function(block) {
-    globals.chestDesignated = true;
-    globals.goldenAppleChest = block;
-    globals.goldenAppleContainer = this.getComponent(block, "minecraft:container");
 }
 
 goldenAppleSystem.isSamePosition = function(coords, block_position) {
